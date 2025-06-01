@@ -94,7 +94,7 @@ export const SearchScreen: React.FC = () => {
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Search location, property type..."
-            className="w-full h-12 px-4 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50"
+            className="w-full h-12 px-4 rounded-full bg-white/10 text-white placeholder-white/70 focus:outline-none focus:bg-white/20"
             autoFocus
           />
         </form>
