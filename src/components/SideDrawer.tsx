@@ -11,7 +11,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, onClose }) => {
     { label: 'Rent', icon: Home },
     { label: 'Sell', icon: Building2 },
     { label: 'About', icon: Info },
-    { label: 'Contact Support', icon: Phone },
+    { label: 'Support', icon: Phone },
   ];
 
   return (
