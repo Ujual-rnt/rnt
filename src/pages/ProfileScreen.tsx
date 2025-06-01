@@ -4,9 +4,6 @@ import {
   ArrowLeft, 
   Bell, 
   Settings, 
-  Heart, 
-  Info, 
-  Phone, 
   Star, 
   LogOut 
 } from 'lucide-react';
@@ -26,10 +23,7 @@ export const ProfileScreen: React.FC = () => {
   
   const menuItems = [
     { icon: Bell, label: 'Notifications' },
-    { icon: Settings, label: 'Settings' },
-    { icon: Heart, label: 'My Interests' },
-    { icon: Info, label: 'About Rent It' },
-    { icon: Phone, label: 'Contact Support' },
+    { icon: Settings, label: 'Profile Settings' },
     { icon: Star, label: 'Leave a Review' },
     { 
       icon: LogOut, 
