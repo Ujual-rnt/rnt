@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, X } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { properties } from '../data/properties';
 import { Property } from '../types/property';
@@ -10,7 +10,7 @@ export const SearchScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [searchResults, setSearchResults] = useState<Property[]>([]);
-  const [showRecent, setShowRecent] = useState(false);
+  const [showRecent, setShowRecent] = useState(true);
   const searchTimeout = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
@@ -23,7 +23,6 @@ export const SearchScreen: React.FC = () => {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setShowRecent(false);
     
     // Clear any existing timeout
     if (searchTimeout.current) {
@@ -32,14 +31,13 @@ export const SearchScreen: React.FC = () => {
 
     if (!query.trim()) {
       setSearchResults([]);
-      // Show recent searches after 2 blinks (assuming cursor blinks every ~530ms)
-      searchTimeout.current = setTimeout(() => {
-        setShowRecent(true);
-      }, 1060);
+      setShowRecent(true);
       return;
     }
 
-    // Search in properties based on title or location only
+    setShowRecent(false);
+
+    // Search in properties based on title or location
     const searchTerm = query.toLowerCase().trim();
     const results = properties.filter(property => 
       property.title.toLowerCase().includes(searchTerm) ||
@@ -47,18 +45,35 @@ export const SearchScreen: React.FC = () => {
     );
 
     setSearchResults(results);
+  };
 
-    // Only save complete words to recent searches when user stops typing
-    searchTimeout.current = setTimeout(() => {
-      if (query.trim()) {
-        const updatedSearches = [
-          query.trim(),
-          ...recentSearches.filter(s => s !== query.trim())
-        ].slice(0, 5);
-        setRecentSearches(updatedSearches);
-        localStorage.setItem('recentSearches', JSON.stringify(updatedSearches));
-      }
-    }, 1000);
+  const saveToRecent = (query: string) => {
+    if (query.trim()) {
+      const updatedSearches = [
+        query.trim(),
+        ...recentSearches.filter(s => s !== query.trim())
+      ].slice(0, 5);
+      setRecentSearches(updatedSearches);
+      localStorage.setItem('recentSearches', JSON.stringify(updatedSearches));
+    }
+  };
+
+  const removeRecentSearch = (searchToRemove: string) => {
+    const updatedSearches = recentSearches.filter(search => search !== searchToRemove);
+    setRecentSearches(updatedSearches);
+    localStorage.setItem('recentSearches', JSON.stringify(updatedSearches));
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      saveToRecent(searchQuery);
+    }
+  };
+
+  const handleRecentSearchClick = (search: string) => {
+    setSearchQuery(search);
+    handleSearch(search);
   };
 
   return (
@@ -73,19 +88,50 @@ export const SearchScreen: React.FC = () => {
         </div>
 
         {/* Search Input */}
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search location, property type..."
-          className="w-full h-12 px-4 rounded-full bg-white/10 text-white placeholder-white/70 focus:outline-none focus:bg-white/20"
-          autoFocus
-        />
+        <form onSubmit={handleSearchSubmit}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder="Search location, property type..."
+            className="w-full h-12 px-4 rounded-full bg-white/10 text-white placeholder-white/70 focus:outline-none focus:bg-white/20"
+            autoFocus
+          />
+        </form>
       </div>
 
       {/* Content */}
       <div className="px-6 py-4">
-        {searchQuery && !showRecent ? (
+        {showRecent && recentSearches.length > 0 ? (
+          // Recent Searches
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Recent searches
+            </h2>
+            <div className="space-y-2">
+              {recentSearches.map((search, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-50"
+                >
+                  <button
+                    className="flex items-center flex-1"
+                    onClick={() => handleRecentSearchClick(search)}
+                  >
+                    <Clock className="text-gray-400 mr-3" size={20} />
+                    <span className="text-gray-700">{search}</span>
+                  </button>
+                  <button
+                    onClick={() => removeRecentSearch(search)}
+                    className="p-2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : searchResults.length > 0 ? (
           // Search Results
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -101,24 +147,9 @@ export const SearchScreen: React.FC = () => {
               </Link>
             ))}
           </div>
-        ) : showRecent ? (
-          // Recent Searches
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              My last searches
-            </h2>
-            <div className="space-y-2">
-              {recentSearches.map((search, index) => (
-                <button
-                  key={index}
-                  className="flex items-center w-full p-3 rounded-lg hover:bg-gray-50"
-                  onClick={() => handleSearch(search)}
-                >
-                  <Clock className="text-gray-400 mr-3" size={20} />
-                  <span className="text-gray-700">{search}</span>
-                </button>
-              ))}
-            </div>
+        ) : searchQuery && !showRecent ? (
+          <div className="flex flex-col items-center justify-center pt-20">
+            <p className="text-base text-gray-600">No results found</p>
           </div>
         ) : null}
       </div>
